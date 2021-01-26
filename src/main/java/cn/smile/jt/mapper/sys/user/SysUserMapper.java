@@ -1,6 +1,6 @@
-package cn.smile.jt.mapper.user;
+package cn.smile.jt.mapper.sys.user;
 
-import cn.smile.jt.entity.pojo.SysUser;
+import cn.smile.jt.entity.pojo.sys.SysUser;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**

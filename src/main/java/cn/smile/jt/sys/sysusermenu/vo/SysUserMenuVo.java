@@ -1,8 +1,8 @@
 package cn.smile.jt.sys.sysusermenu.vo;
 
 import cn.smile.jt.common.pojo.PageCondition;
+import cn.smile.jt.entity.vo.sys.SysUserVo;
 import cn.smile.jt.sys.sysmenu.vo.SysMenuVo;
-import cn.smile.jt.sys.sysuser.vo.SysUserVo;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -12,7 +12,7 @@ import java.util.Date;
 public class SysUserMenuVo extends PageCondition implements Serializable {
     private String userMenuId;//用户菜单表id
 
-    private String userId;//用户id
+    private Long userId;//用户id
 
     private String menuId;//菜单id
 

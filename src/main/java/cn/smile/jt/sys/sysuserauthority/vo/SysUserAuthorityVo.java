@@ -1,8 +1,8 @@
 package cn.smile.jt.sys.sysuserauthority.vo;
 
 import cn.smile.jt.common.pojo.PageCondition;
+import cn.smile.jt.entity.vo.sys.SysUserVo;
 import cn.smile.jt.sys.sysauthority.vo.SysAuthorityVo;
-import cn.smile.jt.sys.sysuser.vo.SysUserVo;
 import lombok.Data;
 
 import java.io.Serializable;

@@ -1,6 +1,6 @@
-package cn.smile.jt.entity.vo;
+package cn.smile.jt.entity.vo.sys;
 
-import cn.smile.jt.entity.pojo.SysUser;
+import cn.smile.jt.entity.pojo.sys.SysUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

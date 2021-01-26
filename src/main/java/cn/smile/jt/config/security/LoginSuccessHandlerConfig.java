@@ -1,7 +1,7 @@
 package cn.smile.jt.config.security;
 
-import cn.smile.jt.sys.sysuser.service.SysUserService;
-import cn.smile.jt.sys.sysuser.vo.SysUserVo;
+import cn.smile.jt.entity.vo.sys.SysUserVo;
+import cn.smile.jt.service.sys.user.SysUserService;
 import cn.smile.jt.util.*;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,6 +20,7 @@ import org.springframework.security.web.authentication.rememberme.PersistentToke
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.Resource;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -38,13 +39,13 @@ import java.util.List;
 @Component
 @Slf4j
 public class LoginSuccessHandlerConfig implements AuthenticationSuccessHandler {
-    @Autowired
+    @Resource
     private SessionRegistry sessionRegistry;
 
-    @Autowired
+    @Resource
     private SysUserService sysUserService;
 
-    @Autowired
+    @Resource
     private DataSource dataSource;
 
     @Override
@@ -58,7 +59,7 @@ public class LoginSuccessHandlerConfig implements AuthenticationSuccessHandler {
 
         //查询当前与系统交互的用户，存储在本地线程安全上下文，校验账号有效性
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        SysUserVo sysUserVo = sysUserService.findByLoginName(user.getUsername()).getData();
+        SysUserVo sysUserVo = sysUserService.findByLoginName(user.getUsername());
 
         //默认登陆成功
         String msg = "{\"code\":\"300\",\"msg\":\"登录成功\",\"url\":\"/index\"}";
@@ -73,19 +74,19 @@ public class LoginSuccessHandlerConfig implements AuthenticationSuccessHandler {
         }
 
         //禁止多人在线
-        if("N".equals(sysUserVo.getLimitMultiLogin()) &&  allSessionIdList.size() > 0){
+        if(!sysUserVo.getLimitMultiLogin() &&  allSessionIdList.size() > 0){
             msg = "{\"code\":\"400\",\"msg\":\"该账号禁止多人在线，请联系管理员\"}";
             flag = true;
         }
 
         //超出有效时间
-        if(!StringUtils.isEmpty(sysUserVo.getExpiredTime()) && new Date().getTime() > sysUserVo.getExpiredTime().getTime()){
+        if(!StringUtils.isEmpty(sysUserVo.getExpiredTime()) && System.currentTimeMillis() > sysUserVo.getExpiredTime().getTime()){
             msg = "{\"code\":\"400\",\"msg\":\"该账号已失效，请联系管理员\"}";
             flag = true;
         }
 
         //禁止登陆系统
-        if("N".equals(sysUserVo.getValid())){
+        if(sysUserVo.getDeleted()){
             msg = "{\"code\":\"400\",\"msg\":\"该账号已被禁止登陆系统，请联系管理员\"}";
             flag = true;
         }
@@ -142,7 +143,6 @@ public class LoginSuccessHandlerConfig implements AuthenticationSuccessHandler {
         out.close();
     }
 
-    @Bean
     public PersistentTokenRepository persistentTokenRepository1() {
         JdbcTokenRepositoryImpl persistentTokenRepository = new JdbcTokenRepositoryImpl();
         persistentTokenRepository.setDataSource(dataSource);

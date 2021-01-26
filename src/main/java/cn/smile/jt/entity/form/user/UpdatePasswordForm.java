@@ -1,7 +1,3 @@
-/**
- * @copyright 中兵智控（成都）有限公司
- */
-
 package cn.smile.jt.entity.form.user;
 
 import lombok.Data;

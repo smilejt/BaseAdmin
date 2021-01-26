@@ -1,12 +1,12 @@
 package cn.smile.jt.sys;
 
+import cn.smile.jt.entity.vo.sys.SysShortcutMenuVo;
+import cn.smile.jt.entity.vo.sys.SysUserVo;
+import cn.smile.jt.service.sys.shortcut.ShortcutMenuService;
+import cn.smile.jt.service.sys.user.SysUserService;
 import cn.smile.jt.sys.sysmenu.vo.SysMenuVo;
 import cn.smile.jt.sys.syssetting.service.SysSettingService;
 import cn.smile.jt.sys.syssetting.vo.SysSettingVo;
-import cn.smile.jt.sys.sysshortcutmenu.service.SysShortcutMenuService;
-import cn.smile.jt.sys.sysshortcutmenu.vo.SysShortcutMenuVo;
-import cn.smile.jt.sys.sysuser.service.SysUserService;
-import cn.smile.jt.sys.sysuser.vo.SysUserVo;
 import cn.smile.jt.sys.sysusermenu.service.SysUserMenuService;
 import cn.smile.jt.util.*;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +50,7 @@ public class IndexController {
     private SysUserMenuService sysUserMenuService;
 
     @Resource
-    private SysShortcutMenuService sysShortcutMenuService;
+    private ShortcutMenuService sysShortcutMenuService;
 
     @Value("${server.servlet.context-path:}")
     private String contextPath;
@@ -121,16 +121,16 @@ public class IndexController {
         modelAndView.addObject("sys", SysSettingUtil.getSysSetting());
 
         //登录用户
-        SysUserVo sysUserVo = sysUserService.findByLoginName(SecurityUtil.getLoginUser().getUsername()).getData();
+        SysUserVo sysUserVo = sysUserService.findByLoginName(SecurityUtil.getLoginUser().getUsername());
         sysUserVo.setPassword(null);//隐藏部分属性
         modelAndView.addObject( "loginUser", sysUserVo);
 
         //登录用户系统菜单
-        List<SysMenuVo> menuVoList = sysUserMenuService.findByUserId(sysUserVo.getUserId()).getData();
+        List<SysMenuVo> menuVoList = sysUserMenuService.findByUserId(sysUserVo.getId()).getData();
         modelAndView.addObject("menuList",menuVoList);
 
         //登录用户快捷菜单
-        List<SysShortcutMenuVo> shortcutMenuVoList= sysShortcutMenuService.findByUserId(sysUserVo.getUserId()).getData();
+        List<SysShortcutMenuVo> shortcutMenuVoList= sysShortcutMenuService.findByUserId();
         modelAndView.addObject("shortcutMenuList",shortcutMenuVoList);
 
         //后端公钥
