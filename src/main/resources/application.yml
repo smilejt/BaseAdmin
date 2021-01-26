@@ -28,9 +28,10 @@ spring:
     time-zone: GMT+8
 
   #打印SQL
-  jpa:
-    show-sql: true
-
+#  jpa:
+#    show-sql: true
+mybatis-plus:
+  mapper-locations: classpath*:mapper/*.xml
 #是否需要输入验证码
 captcha:
   enable: false
@@ -42,7 +43,7 @@ spring:
 
   #数据库配置
   datasource:
-    url: jdbc:mysql://cdb-ccl90hjc.cd.tencentcdb.com:10087/base-admin?serverTimezone=GMT%2B8&characterEncoding=utf-8
+    url: jdbc:mysql://cdb-ccl90hjc.cd.tencentcdb.com:10087/new_base_admin?serverTimezone=GMT%2B8&characterEncoding=utf-8
     username: root
     password: 2020NewLife!
     driver-class-name: com.mysql.cj.jdbc.Driver
