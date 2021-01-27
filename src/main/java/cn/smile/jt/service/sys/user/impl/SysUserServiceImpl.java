@@ -43,6 +43,7 @@ import java.util.List;
  */
 @Service
 @Slf4j
+@SuppressWarnings("unused")
 public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> implements SysUserService {
 
     private static final String LOGIN_NAME_KEY = "login_name";

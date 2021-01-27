@@ -1,20 +1,24 @@
-package cn.smile.jt.sys;
+package cn.smile.jt.controller;
 
+import cn.smile.jt.entity.pojo.sys.SysSetting;
+import cn.smile.jt.entity.vo.sys.SysMenuVo;
 import cn.smile.jt.entity.vo.sys.SysShortcutMenuVo;
 import cn.smile.jt.entity.vo.sys.SysUserVo;
+import cn.smile.jt.service.sys.menu.MenuService;
+import cn.smile.jt.service.sys.setting.SysSettingService;
 import cn.smile.jt.service.sys.shortcut.ShortcutMenuService;
 import cn.smile.jt.service.sys.user.SysUserService;
-import cn.smile.jt.sys.sysmenu.vo.SysMenuVo;
-import cn.smile.jt.sys.syssetting.service.SysSettingService;
-import cn.smile.jt.sys.syssetting.vo.SysSettingVo;
-import cn.smile.jt.sys.sysusermenu.service.SysUserMenuService;
-import cn.smile.jt.util.*;
+import cn.smile.jt.util.RsaUtil;
+import cn.smile.jt.util.SecurityUtil;
+import cn.smile.jt.util.SysSettingUtil;
+import cn.smile.jt.util.VerifyCodeImageUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
@@ -31,26 +35,31 @@ import java.net.UnknownHostException;
 import java.util.List;
 
 /**
- * @description:
- * @author: LongJunTao
- * @time: 2021-01-25 21:14
+ * <p>
+ *
+ * </p>
+ *
+ * @author longjuntao
+ * @since 2021/1/27 10:29
  */
 @Slf4j
 @Controller
 @RequestMapping("/")
 @Configuration
 public class IndexController {
-    @Resource
-    private SysUserService sysUserService;
 
     @Resource
-    private SysSettingService sysSettingService;
-
+    private SysSettingService settingService;
     @Resource
-    private SysUserMenuService sysUserMenuService;
-
+    private SysUserService userService;
     @Resource
-    private ShortcutMenuService sysShortcutMenuService;
+    private ShortcutMenuService shortcutMenuService;
+    @Resource
+    private MenuService menuService;
+
+    private static final int IMAGE_WIDTH = 90;
+    private static final int IMAGE_HEIGHT = 30;
+    private static final int IMAGE_INTER_LINE = 3;
 
     @Value("${server.servlet.context-path:}")
     private String contextPath;
@@ -70,14 +79,17 @@ public class IndexController {
         return applicationArguments -> {
             try {
                 //系统启动时获取数据库数据，设置到公用静态集合sysSettingMap
-                SysSettingVo sysSettingVo = sysSettingService.get("1").getData();
-                SysSettingUtil.setSysSettingMap(sysSettingVo);
+                SysSetting setting = settingService.get(1L);
+                if (StringUtils.isEmpty(setting)) {
+                    throw new UnknownHostException("Unknown System Configuration");
+                }
+                SysSettingUtil.setSysSettingMap(setting);
 
                 //获取本机内网IP
-                log.info("start success:" + "http://" + InetAddress.getLocalHost().getHostAddress() + ":" + port + contextPath);
+                log.info("start success: http://{}:{}{}", InetAddress.getLocalHost().getHostAddress(), port, contextPath);
             } catch (UnknownHostException e) {
                 //输出到日志文件中
-                log.error(ErrorUtil.errorInfoToString(e));
+                log.error("[IndexController].[applicationRunner] ------> error:", e);
             }
         };
     }
@@ -86,7 +98,7 @@ public class IndexController {
      * 跳转登录页面
      */
     @GetMapping("loginPage")
-    public ModelAndView login(){
+    public ModelAndView login() {
         ModelAndView modelAndView = new ModelAndView("login");
 
         //系统信息
@@ -94,7 +106,7 @@ public class IndexController {
 
         //后端公钥
         String publicKey = RsaUtil.getPublicKey();
-        log.info("后端公钥：" + publicKey);
+        log.info("Server Public Key：{}", publicKey);
         modelAndView.addObject("publicKey", publicKey);
 
         return modelAndView;
@@ -104,38 +116,40 @@ public class IndexController {
      * 跳转首页
      */
     @GetMapping("")
-    public void index1(HttpServletResponse response){
+    public void indexPage(HttpServletResponse response) {
         //内部重定向
         try {
             response.sendRedirect("/index");
         } catch (IOException e) {
             //输出到日志文件中
-            log.error(ErrorUtil.errorInfoToString(e));
+            log.error("[IndexController].[indexPage] ------> error:", e);
         }
     }
+
     @GetMapping("index")
-    public ModelAndView index(){
+    public ModelAndView index() {
         ModelAndView modelAndView = new ModelAndView("index");
 
         //系统信息
         modelAndView.addObject("sys", SysSettingUtil.getSysSetting());
 
         //登录用户
-        SysUserVo sysUserVo = sysUserService.findByLoginName(SecurityUtil.getLoginUser().getUsername());
-        sysUserVo.setPassword(null);//隐藏部分属性
-        modelAndView.addObject( "loginUser", sysUserVo);
+        SysUserVo sysUserVo = userService.findByLoginName(SecurityUtil.getLoginUser().getUsername());
+        //隐藏部分属性
+        sysUserVo.setPassword(null);
+        modelAndView.addObject("loginUser", sysUserVo);
 
         //登录用户系统菜单
-        List<SysMenuVo> menuVoList = sysUserMenuService.findByUserId(sysUserVo.getId()).getData();
-        modelAndView.addObject("menuList",menuVoList);
+        List<SysMenuVo> menuVoList = menuService.findByUserId(sysUserVo.getId());
+        modelAndView.addObject("menuList", menuVoList);
 
         //登录用户快捷菜单
-        List<SysShortcutMenuVo> shortcutMenuVoList= sysShortcutMenuService.findByUserId();
-        modelAndView.addObject("shortcutMenuList",shortcutMenuVoList);
+        List<SysShortcutMenuVo> shortcutMenuVoList = shortcutMenuService.findByUserId();
+        modelAndView.addObject("shortcutMenuList", shortcutMenuVoList);
 
         //后端公钥
         String publicKey = RsaUtil.getPublicKey();
-        log.info("后端公钥：" + publicKey);
+        log.info("Server Public Key：{}", publicKey);
         modelAndView.addObject("publicKey", publicKey);
 
         return modelAndView;
@@ -155,11 +169,11 @@ public class IndexController {
 
         //将验证码放到HttpSession里面
         request.getSession().setAttribute("verifyCode", verifyCode);
-        log.info("本次生成的验证码为：" + verifyCode + ",已存放到HttpSession中");
+        log.info("Verify Code = {},Save In HttpSession", verifyCode);
 
         //设置输出的内容的类型为JPEG图像
         response.setContentType("image/jpeg");
-        BufferedImage bufferedImage = VerifyCodeImageUtil.generateImageCode(verifyCode, 90, 30, 3, true, Color.WHITE, Color.BLACK, null);
+        BufferedImage bufferedImage = VerifyCodeImageUtil.generateImageCode(verifyCode, IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_INTER_LINE, true, Color.WHITE, Color.BLACK, null);
 
         //写给浏览器
         ImageIO.write(bufferedImage, "JPEG", response.getOutputStream());
@@ -170,7 +184,7 @@ public class IndexController {
      */
     @GetMapping("monitor")
     public ModelAndView monitor() {
-        return new ModelAndView("monitor.html","port",port);
+        return new ModelAndView("monitor","port",port);
     }
 
     /**
@@ -178,6 +192,6 @@ public class IndexController {
      */
     @GetMapping("logging")
     public ModelAndView logging() {
-        return new ModelAndView("logging.html","port",port);
+        return new ModelAndView("logging","port",port);
     }
 }
