@@ -4,7 +4,6 @@ import cn.smile.jt.common.base.BaseServiceImpl;
 import cn.smile.jt.entity.pojo.sys.SysMenu;
 import cn.smile.jt.entity.pojo.sys.SysUserMenu;
 import cn.smile.jt.entity.vo.sys.SysMenuVo;
-import cn.smile.jt.entity.vo.sys.SysShortcutMenuVo;
 import cn.smile.jt.mapper.sys.menu.SysMenuMapper;
 import cn.smile.jt.mapper.sys.menu.SysUserMenuMapper;
 import cn.smile.jt.service.sys.menu.MenuService;
